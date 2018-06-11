@@ -123,6 +123,16 @@ public:
 		return this->cameraFPS;
 	}
 
+	bool isGenerateRay() {
+		return generateRay;
+	}
+
+	void setGenerateRay(bool generateRay) {
+		this->generateRay = generateRay;
+	}
+
+	bool generateRay;
+
 protected:
 	glm::ivec2 lastMousePos;
 	bool * mouseButtomState;

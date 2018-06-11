@@ -23,6 +23,8 @@ InputCodes InputManager::toApplicationKey(int key) {
 		return InputCodes::Left;
 	case 262:
 		return InputCodes::Right;
+	case 32:
+		return InputCodes::Space;
 	}
 }
 

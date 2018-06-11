@@ -172,10 +172,24 @@ public:
 		return this->Front;
 	}
 
+	glm::vec3 getUp() {
+		return this->Up;
+	}
+
 	glm::mat4 getViewMatrix() {
 		return glm::lookAt(this->cameraPos, this->cameraLookAt,
 				this->getCameraUp());
 	}
+
+	bool isGenerateRay() {
+		return generateRay;
+	}
+
+	void setGenerateRay(bool generateRay) {
+		this->generateRay = generateRay;
+	}
+
+	bool generateRay;
 
 
 protected:

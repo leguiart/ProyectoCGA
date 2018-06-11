@@ -71,5 +71,15 @@ enum MODEL_MODE {
 	VERTEX_LIGHT_TEXTURE
 };
 
+typedef struct _AABB {
+	glm::vec3 min;
+	glm::vec3 max;
+} AABB;
+
+typedef struct _SBB {
+	glm::vec3 center;
+	float ratio;
+} SBB;
+
 #endif /* HEADERS_DEFINITION_H_ */
 

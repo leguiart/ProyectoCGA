@@ -2,6 +2,8 @@
 //glew include
 #include <GL/glew.h>
 
+#include <glm/gtc/random.inl>
+
 //std includes
 #include <string>
 #include <iostream>
@@ -27,10 +29,20 @@
 #include "Headers/Model.h"
 #include "Headers/Piso.h"
 #include "Headers/Sphere.h"
-//Estas son para la luna y el sol
+#include "Headers/collision.h"
+
+//OpenAL include
+#include <AL/alut.h>
+
+#define NUM_BUFFERS 3
+#define NUM_SOURCES 3
+#define NUM_ENVIRONMENTS 1
+
+//Estas son para la luna, el sol y el boundingbox
 Sphere sp(1.5, 50, 50, MODEL_MODE::VERTEX_LIGHT_TEXTURE);
 Sphere sp2(1.5, 50, 50, MODEL_MODE::VERTEX_LIGHT_TEXTURE);
 Sphere sp3(1.5, 50, 50, MODEL_MODE::VERTEX_LIGHT_TEXTURE);
+Sphere BoundingSphere(1.0, 50, 50, MODEL_MODE::VERTEX_COLOR);
 
 Shader directionalLightShader;
 Shader directionalLightPiso;
@@ -61,6 +73,55 @@ GLFWwindow * window;
 InputManager3dp inputManager = InputManager3dp(glm::vec3(32.0f, -1.25f, 40.0f), 5, 15, 180);
 double deltaTime, elapsedTime;
 GLuint VAO, VBO, EBO;
+
+//OpenAL config
+ALfloat listenerPos[] = { 0.0, 0.0, 4.0 };
+ALfloat listenerVel[] = { 0.0, 0.0, 0.0 };
+ALfloat listenerOri[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 0.0 };
+
+ALfloat source0Pos[] = { -2.0, 0.0, 0.0 };
+ALfloat source0Vel[] = { 0.0, 0.0, 0.0 };
+
+ALfloat source1Pos[] = { 2.0, 0.0, 0.0 };
+ALfloat source1Vel[] = { 0.0, 0.0, 0.0 };
+
+ALfloat source2Pos[] = { 0.0, 0.0, -4.0 };
+ALfloat source2Vel[] = { 0.0, 0.0, 0.0 };
+
+ALuint buffer[NUM_BUFFERS];
+ALuint source[NUM_SOURCES];
+ALuint environment[NUM_ENVIRONMENTS];
+
+ALsizei size, freq;
+ALenum format;
+ALvoid *data;
+int ch, cont = 0;
+ALboolean loop;
+
+//Atributos de los modelos estáticos
+struct static_model_attribs {
+	glm::vec3 pos;
+	glm::vec3 scale;
+	AABB aabb;
+	glm::mat4 model;
+};
+
+static std::vector<static_model_attribs>  trees = {
+	{glm::vec3(6.0f, -2.5f, 10.0f), glm::vec3(0.05f, 0.05f, 0.05f)}, {glm::vec3(-20.0f, -2.5f, 15.0f), glm::vec3(0.04f, 0.045f, 0.05f)},
+	{glm::vec3(-1.5f, -2.5f, -42.5f), glm::vec3(0.05f, 0.04f, 0.05f)}, {glm::vec3(10.8f, -2.5f, 12.3f), glm::vec3(0.05f, 0.04f, 0.05f)},
+	{glm::vec3(24.4f, -2.5f, 45.5f), glm::vec3(0.05f, 0.048f, 0.05f)}, {glm::vec3(-26.7f, -2.5f, 7.5f), glm::vec3(0.06f, 0.036f, 0.055f)},
+	{glm::vec3(-24.3f, -2.5f, 25.5f), glm::vec3(0.05f, 0.056f, 0.05f)}, {glm::vec3(45.5f, -2.5f, -22.5f), glm::vec3(0.043f, 0.06f, 0.057f)},
+	{glm::vec3(-90.7f, -2.5f, 65.5f), glm::vec3(0.05f, 0.045f, 0.05f)}, { glm::vec3(33.3f, -2.5f, 11.5f), glm::vec3(0.06f, 0.055f, 0.05f)}
+};
+
+static std::vector<static_model_attribs> rocks = {
+	{glm::vec3(66.0f, -2.3f, 12.0f), glm::vec3(0.4f, 0.4f, 0.5f)}, {glm::vec3(8.0f, -2.3f, -5.75f), glm::vec3(0.55f, 0.58f, 0.5f)},
+	{glm::vec3(4.0f, -2.3f, 32.4f), glm::vec3(0.5f, 0.5f, 0.5f)}, {glm::vec3(15.0f, -2.3f, 4.65f), glm::vec3(0.5f, 0.5f, 0.5f)},
+	{glm::vec3(90.0f, -2.3f, 43.6f), glm::vec3(0.4f, 0.35f, 0.6f)}, {glm::vec3(67.0f, -2.3f, 50.0f), glm::vec3(0.3f, 0.56f, 0.4f)},
+	{glm::vec3(40.0f, -2.3f, -21.0f), glm::vec3(0.35f, 0.5f, 0.55f)}, {glm::vec3(50.0f, -2.3f, 35.0f), glm::vec3(0.44f, 0.45f, 0.34f)},
+	{glm::vec3(80.0f, -2.3f, -32.0f), glm::vec3(0.2f, 0.5f, 0.3f)}, {glm::vec3(35.0f, -2.3f, 88.0f), glm::vec3(0.5f, 0.6f, 0.32f)}
+};
+
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -70,6 +131,7 @@ void mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void init(int width, int height, std::string strTitle, bool bFullScreen);
 void destroyWindow();
 void destroy();
+void view_proj(Shader*, glm::vec3, glm::vec3);
 bool processInput(bool continueApplication = true);
 
 // Implementacion de todas las funciones.
@@ -145,6 +207,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cubeMaptexture2->Load();
 
 	elapsedTime = 0;
+	ch = 0;
 	directionalLightShader.initialize("../Shaders/typeLight.vs", "../Shaders/directionalLight.fs");
 	directionalLightPiso.initialize("../Shaders/typeLightPiso.vs", "../Shaders/directionalLightPiso.fs");
 	pointLightShader.initialize("../Shaders/typeLight.vs", "../Shaders/pointLight.fs");
@@ -156,7 +219,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	objModel[0].loadModel("../objects/tree/AL05m.3DS");
 	objModel[1].loadModel("../objects/ufo/Low_poly_UFO.obj");
-	objModel[2].loadModel("../objects/ufo/Low_poly_UFO.obj");
+	objModel[2].loadModel("../objects/rock/rock.obj");
 
 
 	texture2 = new Texture(GL_TEXTURE_2D, "../Textures/tanque.jpg");
@@ -178,6 +241,51 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	sp3.init();
 	sp3.load();
+
+	BoundingSphere.init();
+	BoundingSphere.load();
+
+	// OpenAL init
+	alutInit(0, NULL);
+
+	alListenerfv(AL_POSITION, listenerPos);
+	alListenerfv(AL_VELOCITY, listenerVel);
+	alListenerfv(AL_ORIENTATION, listenerOri);
+
+	alGetError(); // clear any error messages
+
+	if (alGetError() != AL_NO_ERROR) {
+		printf("- Error creating buffers !!\n");
+		exit(1);
+	}
+	else {
+		printf("init() - No errors yet.");
+	}
+
+	// Generate buffers, or else no sound will happen!
+	alGenBuffers(NUM_BUFFERS, buffer);
+
+	buffer[0] = alutCreateBufferFromFile("../sounds/Robot Fire Fire.wav");
+	//buffer[0] = alutCreateBufferHelloWorld();
+
+	alGetError(); /* clear error */
+	alGenSources(NUM_SOURCES, source);
+
+	if (alGetError() != AL_NO_ERROR) {
+		printf("- Error creating sources !!\n");
+		exit(2);
+	}
+	else {
+		printf("init - no errors after alGenSources\n");
+	}
+
+	alSourcef(source[0], AL_PITCH, 1.0f);
+	alSourcef(source[0], AL_GAIN, 1.0f);
+	alSourcefv(source[0], AL_POSITION, source0Pos);
+	alSourcefv(source[0], AL_VELOCITY, source0Vel);
+	alSourcei(source[0], AL_BUFFER, buffer[0]);
+	alSourcei(source[0], AL_LOOPING, AL_TRUE);
+	alSourcef(source[0], AL_MAX_DISTANCE, 1200);
 
 }
 
@@ -209,6 +317,9 @@ void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes) {
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mode) {
 	inputManager.keyPressed(inputManager.toApplicationKey(key), deltaTime,
 		inputManager.toApplicationState(action));
+	if (inputManager.getKeyState()[InputCodes::Space]) {
+		cont++;
+	}
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -323,20 +434,24 @@ void applicationLoop() {
 	glm::vec3 lightPos2;
 	double lastTime = TimeManager::Instance().GetTime();
 
-	glm::vec3 treePositions[] =
-	{ glm::vec3(6.0f, -2.5f, 10.0f), glm::vec3(-20.0f, -2.5f, 15.0f),
-		glm::vec3(-1.5f, -2.5f, -42.5f), glm::vec3(10.8f, -2.5f, 12.3f),
-		glm::vec3(24.4f, -2.5f, 45.5f), glm::vec3(-26.7f, -2.5f, 7.5f),
-		glm::vec3(-24.3f, -2.5f, 25.5f), glm::vec3(45.5f, -2.5f, -22.5f),
-		glm::vec3(-90.7f, -2.5f, 65.5f), glm::vec3(33.3f, -2.5f, 11.5f) };
+	for (int i = 0; i < trees.size(); i++) {
+		float aux;
+		trees[i].aabb = getAABB(objModel[0].getMeshes());
+		aux = trees[i].aabb.max.y;
+		trees[i].aabb.max.y = trees[i].aabb.min.y;
+		trees[i].aabb.min.y = aux;
+		rocks[i].aabb = getAABB(objModel[2].getMeshes());
+	}
+
+	SBB sbbTanque = getSBB(objModel[4].getMeshes());
 
 	while (psi) {
 		psi = processInput(true);
 		// This is new, need clear depth buffer bit
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		elapsedTime += deltaTime;
-		lightPos = glm::vec3(0.4f*sin(0.1f*elapsedTime) - 0.4f*sin(elapsedTime), 100.0f*glm::cos(0.1f*elapsedTime), 100.0f*sin(0.1f * elapsedTime));
-		lightPos2 = glm::vec3(0.4f*sin(0.1f*elapsedTime) - 0.4f*sin(elapsedTime), 100.0f*glm::cos(0.1f*elapsedTime + M_PI), 100.0f*sin(0.1f * elapsedTime));
+		lightPos = glm::vec3(0.4f*sin(0.1f*elapsedTime) - 0.4f*sin(elapsedTime), 50.0f*glm::cos(0.1f*elapsedTime), 100.0f*sin(0.1f * elapsedTime));
+		lightPos2 = glm::vec3(0.4f*sin(0.1f*elapsedTime) - 0.4f*sin(elapsedTime), 50.0f*glm::cos(0.1f*elapsedTime + M_PI), 100.0f*sin(0.1f * elapsedTime));
 
 		/* Algo con la linterna
 		if(lightPos.y>0)
@@ -368,55 +483,38 @@ void applicationLoop() {
 		lightingShader = &directionalLightShader;
 		lightingShader->turnOn();
 		view_proj(lightingShader, lightPos, lightPos2);
-		/*
-		model = glm::mat4();
-		//model = glm::scale(model, glm::vec3(50.0f, 50.0f, 50.0f));
-		model = glm::translate(model, glm::vec3(5.0f, -2.5f, -100.0f));
-		model = glm::rotate(model, -(float)M_PI*0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(0.005f, 0.005f, 0.005f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		objModel[0].render(lightingShader);
-		*/
 		modelLoc = lightingShader->getUniformLocation("model");
 		// Draw Trees
-		for (GLuint i = 0; i < 10; i++) {
+		for (GLuint i = 0; i < trees.size(); i++) {
 			model = glm::mat4();
-			model = glm::translate(model, treePositions[i]);
-			GLfloat angle = 20.0f * i;
+			model = glm::translate(model, trees[i].pos);
 			model = glm::rotate(model, -(float)M_PI*0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::rotate(model, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-			model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));
+			model = glm::scale(model, trees[i].scale);
 			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 			objModel[0].render(lightingShader);
 		}
-		
-		/*
-		// Draw a sphere
-		for (GLuint i = 0; i < 10; i++) {
-			glm::mat4 model;
-			model = glm::translate(model, treePositions[i]);
-			GLfloat angle = 20.0f * i;
-			model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-			model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
+
+		if (cont<5)
+		{
+			model = glm::mat4();
+			//model = glm::translate(model, glm::vec3(-6.0f + 60.0f*glm::sin(lastTime*10.5f + deltaTime) - glm::sin(lastTime*0.5), -2.75f, -3.0f));
+			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+			model = glm::translate(model, glm::vec3(-6.0f + 80.0f*glm::cos(1.5f*elapsedTime) - 80.0f*glm::cos(elapsedTime), -2.75f + 0.4f*sin(1.5f*elapsedTime) - 0.4f*sin(elapsedTime), -3.0f + 40.0f*sin(1.5f * elapsedTime) - 40.0f*sin(elapsedTime)));
+			//std::cout << glm::sin(elapsedTime) << std::endl;
 			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-			textureDifuse2.bind(GL_TEXTURE0);
-			textureSpecular2.bind(GL_TEXTURE1);
-			int diffuseMapLoc = lightingShader->getUniformLocation("diffuse");
-			int specularMapLoc = lightingShader->getUniformLocation("specular");
-
-			glUniform1i(diffuseMapLoc, 0);
-			glUniform1i(specularMapLoc, 1);
-
-			sp2.render();
+			objModel[1].render(lightingShader);
 		}
-		*/
-		model = glm::mat4();
-		//model = glm::translate(model, glm::vec3(-6.0f + 60.0f*glm::sin(lastTime*10.5f + deltaTime) - glm::sin(lastTime*0.5), -2.75f, -3.0f));
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-		model = glm::translate(model, glm::vec3(-6.0f + 80.0f*glm::cos(1.5f*elapsedTime) - 80.0f*glm::cos(elapsedTime), -2.75f + 0.4f*sin(1.5f*elapsedTime) - 0.4f*sin(elapsedTime), -3.0f + 40.0f*sin(1.5f * elapsedTime) - 40.0f*sin(elapsedTime)));
-		//std::cout << glm::sin(elapsedTime) << std::endl;
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		objModel[1].render(lightingShader);
+		
+
+		// Draw rocks
+		for (GLuint i = 0; i < rocks.size(); i++) {
+			model = glm::mat4();
+			model = glm::translate(model, rocks[i].pos);
+			//model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+			model = glm::scale(model, rocks[i].scale);
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			objModel[2].render(lightingShader);
+		}
 
 		texture2->bind(GL_TEXTURE0);
 		glUniform1i(lightingShader->getUniformLocation("textura1"), 0);
@@ -474,6 +572,33 @@ void applicationLoop() {
 		model = glm::scale(model, glm::vec3(2.0, 2.0, 2.0));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		sp2.render();
+		/*
+		model1 = glm::translate(model1,
+			glm::vec3(sbbTanque.center.x, sbbTanque.center.y, sbbTanque.center.z));
+		model1 = glm::scale(model1,
+			glm::vec3(sbbTanque.ratio, sbbTanque.ratio, sbbTanque.ratio));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model1));
+		BoundingSphere.render();
+		
+
+		
+		// For test collision sphere vs sphere
+		SBB s1;
+		s1.center = glm::vec3(model1 * glm::vec4(0, 0, 0, 1));
+		s1.ratio = sbbTanque.ratio * 0.005f;
+		for (int i = 0; i < trees.size(); i++)
+		{
+			if (testSphereBoxIntersection(s1, trees[i].aabb))
+				std::cout << "Tree collision:" << std::endl;
+		}
+
+		for (int i = 0; i < rocks.size(); i++)
+		{
+			if (testSphereBoxIntersection(s1, rocks[i].aabb))
+				std::cout << "Rock collision:" << std::endl;
+		}
+		*/
+
 		lampShader.turnOff();
 
 		cubeMapShader.turnOn();
@@ -534,8 +659,37 @@ void applicationLoop() {
 
 		glUniform3fv(envCubeShader.getUniformLocation("viewPos"), 1, glm::value_ptr(inputManager.getCameraPos()));
 		envCubeShader.turnOff();
-
 		glfwSwapBuffers(window);
+
+		source0Pos[0] = model[3].x;
+		source0Pos[1] = model[3].y;
+		source0Pos[2] = model[3].z;
+		alSourcefv(source[0], AL_POSITION, source0Pos);
+
+		listenerPos[0] = inputManager.getCameraPos().x;
+		listenerPos[1] = inputManager.getCameraPos().y;
+		listenerPos[2] = inputManager.getCameraPos().z;
+		alListenerfv(AL_POSITION, listenerPos);
+
+		listenerOri[0] = inputManager.getFront().x;
+		listenerOri[1] = inputManager.getFront().y;
+		listenerOri[2] = inputManager.getFront().z;
+		listenerOri[3] = inputManager.getUp().x;
+		listenerOri[4] = inputManager.getUp().y;
+		listenerOri[5] = inputManager.getUp().z;
+		alListenerfv(AL_ORIENTATION, listenerOri);
+
+		if (inputManager.getKeyState()[InputCodes::Space]) {
+			alSourcePlay(source[0]);
+			ch = 0;
+		}
+		else if (ch > 300) {
+			alSourceRewind(source[0]);
+		}
+		else {
+			ch++;
+		}
+
 	}
 }
 

@@ -75,6 +75,9 @@
     <ClInclude Include="src\Headers\CubemapTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Headers\collision.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SpaceInvaders3D.rc" />
@@ -101,19 +104,19 @@
     <None Include="..\Shaders\mvpTexture.vs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\Shaders\spotLight.fs">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="..\Shaders\pointLight.fs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Shaders\typeLight.vs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\Shaders\directionalLightPiso.fs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\Shaders\typeLightPiso.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Shaders\spotLight.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Shaders\typeLight.vs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

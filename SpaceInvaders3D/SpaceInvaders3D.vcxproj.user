@@ -4,6 +4,6 @@
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerEnvironment>PATH=%PATH%;..\..\external\assimp-4.1.0\build\code\Debug;..\..\external\FreeImage\Dist\x32;..\..\external\glew-2.1.0\bin\Debug\Win32</LocalDebuggerEnvironment>
+    <LocalDebuggerEnvironment>PATH=%PATH%;..\..\external\assimp-4.1.0\build\code\Debug;..\..\external\FreeImage\Dist\x32;..\..\external\glew-2.1.0\bin\Debug\Win32;..\..\external\freealut\build\src\Debug</LocalDebuggerEnvironment>
   </PropertyGroup>
 </Project>

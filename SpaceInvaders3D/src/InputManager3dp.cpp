@@ -31,6 +31,9 @@ InputCodes InputManager3dp::toApplicationKey(int key) {
 		return InputCodes::Q;
 	case 113:
 		return InputCodes::q;
+	case 32:
+		return InputCodes::Space;
+
 	}
 }
 
@@ -117,7 +120,7 @@ void InputManager3dp::do_movement(float deltaTime) {
 
 	//Calculate camera position
 	theta = 0 + angleAroundPlayer + thetaOffset;
-	float fr = 0.01f;
+	float fr = 0.014f;
 	float offsetx = horizontalDistance * glm::sin(glm::radians(theta));
 	float offsetz = horizontalDistance * glm::cos(glm::radians(theta));
 	cameraPos.x = cameraLookAt.x - offsetx + cameraPosOffset.x;
@@ -148,12 +151,12 @@ void InputManager3dp::do_movement(float deltaTime) {
 	if (keyState[InputCodes::Q] || keyState[InputCodes::q])
 	{
 		//std::cout << "move left" << std::endl;
-		rightVel -= 0.0001f;
+		rightVel -= 0.00013f;
 	}
 	else if (keyState[InputCodes::E] || keyState[InputCodes::e])
 	{
 		//std::cout << "move right" << std::endl;
-		rightVel += 0.0001f;
+		rightVel += 0.00013f;
 	}
 
 	cameraLookAt.z += offsetz * linearVel;
