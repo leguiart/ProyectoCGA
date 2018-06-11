@@ -31,6 +31,9 @@
     <ClCompile Include="src\Sphere.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\CubemapTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Headers\CameraFPS.h">
@@ -69,6 +72,9 @@
     <ClInclude Include="src\Headers\Sphere.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Headers\CubemapTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SpaceInvaders3D.rc" />
@@ -102,6 +108,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\Shaders\typeLight.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Shaders\directionalLightPiso.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Shaders\typeLightPiso.vs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

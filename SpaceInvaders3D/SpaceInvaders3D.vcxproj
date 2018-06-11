@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\CubemapTexture.cpp" />
     <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\InputManager3dp.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -25,6 +26,7 @@
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\Headers\CameraFPS.h" />
+    <ClInclude Include="src\Headers\CubemapTexture.h" />
     <ClInclude Include="src\Headers\definition.h" />
     <ClInclude Include="src\Headers\InputManager.h" />
     <ClInclude Include="src\Headers\InputManager3dp.h" />
@@ -38,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Shaders\directionalLight.fs" />
+    <None Include="..\Shaders\directionalLightPiso.fs" />
     <None Include="..\Shaders\lampShader.fs" />
     <None Include="..\Shaders\lampShader.vs" />
     <None Include="..\Shaders\mixTexture.fs" />
@@ -47,6 +50,7 @@
     <None Include="..\Shaders\pointLight.fs" />
     <None Include="..\Shaders\spotLight.fs" />
     <None Include="..\Shaders\typeLight.vs" />
+    <None Include="..\Shaders\typeLightPiso.vs" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SpaceInvaders3D.rc" />

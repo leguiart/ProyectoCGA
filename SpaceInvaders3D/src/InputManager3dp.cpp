@@ -117,7 +117,7 @@ void InputManager3dp::do_movement(float deltaTime) {
 
 	//Calculate camera position
 	theta = 0 + angleAroundPlayer + thetaOffset;
-	float fr = 0.009f;
+	float fr = 0.01f;
 	float offsetx = horizontalDistance * glm::sin(glm::radians(theta));
 	float offsetz = horizontalDistance * glm::cos(glm::radians(theta));
 	cameraPos.x = cameraLookAt.x - offsetx + cameraPosOffset.x;
@@ -127,11 +127,11 @@ void InputManager3dp::do_movement(float deltaTime) {
 	this->updateModelVectors();
 	if (keyState[InputCodes::W] || keyState[InputCodes::w] || keyState[InputCodes::Up])
 	{
-		linearVel += 0.0002f;
+		linearVel += 0.00015f;
 	}
 	else if (keyState[InputCodes::S] || keyState[InputCodes::s] || keyState[InputCodes::Down])
 	{
-		linearVel -= 0.0002f;
+		linearVel -= 0.00015f;
 	}
 
 	if (keyState[InputCodes::A] || keyState[InputCodes::a] || keyState[InputCodes::Left])
