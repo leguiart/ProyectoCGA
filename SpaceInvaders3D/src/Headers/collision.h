@@ -108,7 +108,7 @@ bool testSphereBoxIntersection(SBB sbb1, AABB aabb1) {
 				d += s * s;
 			}
 			else if (sbb1.center[i] > aabb1.max[i]) {
-				s = sbb1.center[i] - aabb1.min[i];
+				s = sbb1.center[i] - aabb1.max[i];
 				d += s * s;
 			}
 			else {

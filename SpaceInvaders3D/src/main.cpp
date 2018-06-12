@@ -236,14 +236,54 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	sp2.init();
 	sp2.load();
 
+	BoundingSphere.init();
+	BoundingSphere.load();
+	
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
 	sp3.init();
 	sp3.load();
 
-	BoundingSphere.init();
-	BoundingSphere.load();
+	/*
+	for (int i = 0; i < trees.size(); i++) {
+		
+		trees[i].aabb = getAABB(objModel[0].getMeshes());
+		aux = trees[i].aabb.max.y;
+		trees[i].aabb.max.y = trees[i].aabb.min.y;
+		trees[i].aabb.min.y = aux;
+		rocks[i].aabb = getAABB(objModel[2].getMeshes());
+
+	}*/
+	AABB a1, a2;
+	float aux;
+	a1 = getAABB(objModel[0].getMeshes());
+	aux = a1.max.y;
+	a1.max.y = a1.min.y;
+	a1.min.y = aux;
+	a2 = getAABB(objModel[2].getMeshes());
+	
+	for (GLuint i = 0; i < trees.size(); i++) {
+		trees[i].model = glm::mat4();
+		trees[i].model = glm::translate(trees[i].model, trees[i].pos);
+		trees[i].model = glm::rotate(trees[i].model, -(float)M_PI*0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
+		trees[i].model = glm::scale(trees[i].model, trees[i].scale);
+		trees[i].aabb.max = glm::vec3(trees[i].model * glm::vec4(a1.max, 1.0f));
+		trees[i].aabb.min = glm::vec3(trees[i].model * glm::vec4(a1.min, 1.0f)); 
+		std::cout << "Tree" << i << " Max: " << trees[i].aabb.max.x << ", " << trees[i].aabb.max.y << ", " << trees[i].aabb.max.z << std::endl;
+		std::cout << "Tree" << i << " Min: " << trees[i].aabb.min.x << ", " << trees[i].aabb.min.y << ", " << trees[i].aabb.min.z << std::endl;
+	}
+
+	for (GLuint i = 0; i < rocks.size(); i++) {
+		rocks[i].model = glm::mat4();
+		rocks[i].model = glm::translate(rocks[i].model, rocks[i].pos);
+		//model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+		rocks[i].model = glm::scale(rocks[i].model, rocks[i].scale);
+		rocks[i].aabb.max = glm::vec3(rocks[i].model * glm::vec4(a2.max, 1.0f));
+		rocks[i].aabb.min = glm::vec3(rocks[i].model * glm::vec4(a2.min, 1.0f));
+		std::cout << "Rock" << i << " Max: " << rocks[i].aabb.max.x << ", " << rocks[i].aabb.max.y << ", " << rocks[i].aabb.max.z << std::endl;
+		std::cout << "Rock" << i << " Min: " << rocks[i].aabb.min.x << ", " << rocks[i].aabb.min.y << ", " << rocks[i].aabb.min.z << std::endl;
+	}
 
 	// OpenAL init
 	alutInit(0, NULL);
@@ -317,9 +357,6 @@ void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes) {
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mode) {
 	inputManager.keyPressed(inputManager.toApplicationKey(key), deltaTime,
 		inputManager.toApplicationState(action));
-	if (inputManager.getKeyState()[InputCodes::Space]) {
-		cont++;
-	}
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -420,7 +457,6 @@ void view_proj(Shader * lightingShader, glm::vec3 lightPos1, glm::vec3 lightPos2
 	projection = glm::perspective(45.0f, (float)screenWidth / (float)screenHeight, 0.1f, 500.0f);
 
 	// Get the uniform locations
-	GLint modelLoc = lightingShader->getUniformLocation("model");
 	GLint viewLoc = lightingShader->getUniformLocation("view");
 	GLint projLoc = lightingShader->getUniformLocation("projection");
 	// Pass the matrices to the shader
@@ -433,16 +469,6 @@ void applicationLoop() {
 	glm::vec3 lightPos;
 	glm::vec3 lightPos2;
 	double lastTime = TimeManager::Instance().GetTime();
-
-	for (int i = 0; i < trees.size(); i++) {
-		float aux;
-		trees[i].aabb = getAABB(objModel[0].getMeshes());
-		aux = trees[i].aabb.max.y;
-		trees[i].aabb.max.y = trees[i].aabb.min.y;
-		trees[i].aabb.min.y = aux;
-		rocks[i].aabb = getAABB(objModel[2].getMeshes());
-	}
-
 	SBB sbbTanque = getSBB(objModel[4].getMeshes());
 
 	while (psi) {
@@ -467,7 +493,6 @@ void applicationLoop() {
 
 		glm::mat4 model;
 		model = glm::translate(glm::vec3(-100.0f, 0.0f, -100.0f))*glm::scale(glm::vec3(200.0f, 5.0f, 200.0f));
-
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		textureDifuse2.bind(GL_TEXTURE0);
 		textureSpecular2.bind(GL_TEXTURE1);
@@ -484,35 +509,35 @@ void applicationLoop() {
 		lightingShader->turnOn();
 		view_proj(lightingShader, lightPos, lightPos2);
 		modelLoc = lightingShader->getUniformLocation("model");
+
 		// Draw Trees
 		for (GLuint i = 0; i < trees.size(); i++) {
-			model = glm::mat4();
-			model = glm::translate(model, trees[i].pos);
-			model = glm::rotate(model, -(float)M_PI*0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, trees[i].scale);
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			/*
+			trees[i].model = glm::mat4();
+			trees[i].model = glm::translate(trees[i].model, trees[i].pos);
+			trees[i].model = glm::rotate(trees[i].model, -(float)M_PI*0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
+			trees[i].model = glm::scale(trees[i].model, trees[i].scale);
+			*/
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(trees[i].model));
+			//trees[i].aabb = getAABB(objModel[0].getMeshes());
 			objModel[0].render(lightingShader);
 		}
 
-		if (cont<5)
-		{
-			model = glm::mat4();
-			//model = glm::translate(model, glm::vec3(-6.0f + 60.0f*glm::sin(lastTime*10.5f + deltaTime) - glm::sin(lastTime*0.5), -2.75f, -3.0f));
-			model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-			model = glm::translate(model, glm::vec3(-6.0f + 80.0f*glm::cos(1.5f*elapsedTime) - 80.0f*glm::cos(elapsedTime), -2.75f + 0.4f*sin(1.5f*elapsedTime) - 0.4f*sin(elapsedTime), -3.0f + 40.0f*sin(1.5f * elapsedTime) - 40.0f*sin(elapsedTime)));
-			//std::cout << glm::sin(elapsedTime) << std::endl;
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-			objModel[1].render(lightingShader);
-		}
+		model = glm::mat4();
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+		model = glm::translate(model, glm::vec3(-6.0f + 80.0f*glm::cos(1.5f*elapsedTime) - 80.0f*glm::cos(elapsedTime), -2.75f + 0.4f*sin(1.5f*elapsedTime) - 0.4f*sin(elapsedTime), -3.0f + 40.0f*sin(1.5f * elapsedTime) - 40.0f*sin(elapsedTime)));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		objModel[1].render(lightingShader);
 		
-
 		// Draw rocks
 		for (GLuint i = 0; i < rocks.size(); i++) {
-			model = glm::mat4();
-			model = glm::translate(model, rocks[i].pos);
+			/*
+			rocks[i].model = glm::mat4();
+			rocks[i].model = glm::translate(rocks[i].model, rocks[i].pos);
 			//model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-			model = glm::scale(model, rocks[i].scale);
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			rocks[i].model = glm::scale(rocks[i].model, rocks[i].scale);
+			*/
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(rocks[i].model));
 			objModel[2].render(lightingShader);
 		}
 
@@ -524,6 +549,7 @@ void applicationLoop() {
 		model = glm::rotate(model, (float)90.0*glm::pi<float>() / 180.0f, glm::vec3(0.0f, -1.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		objModel[3].render(lightingShader);
+		glm::mat4 model1 = model;
 
 		model = glm::mat4();
 		model = glm::translate(model, glm::vec3(12.0f, -2.5f, -10.0f));
@@ -532,6 +558,7 @@ void applicationLoop() {
 	
 		lightingShader->turnOff();
 
+		//Render SBB
 		lampShader.turnOn();
 		glm::mat4 view;
 		view = glm::rotate(view,
@@ -546,17 +573,49 @@ void applicationLoop() {
 
 		glm::mat4 projection;
 		projection = glm::perspective(45.0f, (float)screenWidth / (float)screenHeight, 0.1f, 500.0f);
-		texture1->bind(GL_TEXTURE0);
-		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glUniform1i(lampShader.getUniformLocation("textura1"), 0);
-		// Create transformations
 		modelLoc = lampShader.getUniformLocation("model");
 		GLint viewLoc = lampShader.getUniformLocation("view");
 		GLint projLoc = lampShader.getUniformLocation("projection");
+
 		// Pass the matrices to the shader
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		model1 = glm::translate(model1,
+			glm::vec3(sbbTanque.center.x, sbbTanque.center.y, sbbTanque.center.z));
+		model1 = glm::scale(model1,
+			glm::vec3(sbbTanque.ratio, sbbTanque.ratio, sbbTanque.ratio));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model1));
+		BoundingSphere.render();
+		lampShader.turnOff();
+
+		// Render Light Sphere models
+		lampShader.turnOn();
+		/*
+		glm::mat4 view;
+		view = glm::rotate(view,
+			glm::radians(inputManager.getPitch()),
+			glm::vec3(1, 0, 0));
+		view = glm::rotate(view,
+			glm::radians(inputManager.getYaw()),
+			glm::vec3(0, 1, 0));
+		glm::vec3 cameraPos = inputManager.getCameraPos();
+		view = glm::translate(view,
+			glm::vec3(-cameraPos.x, -cameraPos.y, -cameraPos.z));
+
+		glm::mat4 projection;
+		projection = glm::perspective(45.0f, (float)screenWidth / (float)screenHeight, 0.1f, 500.0f);
+		*/
+
+		// Create transformations
+		modelLoc = lampShader.getUniformLocation("model");
+		viewLoc = lampShader.getUniformLocation("view");
+		projLoc = lampShader.getUniformLocation("projection");
+		// Pass the matrices to the shader
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+		texture1->bind(GL_TEXTURE0);
+		glUniform1i(lampShader.getUniformLocation("textura1"), 0);
 		model = glm::mat4();
 		model = glm::translate(glm::mat4(), lightPos);
 		model = glm::scale(model, glm::vec3(1.5, 1.5, 1.5));
@@ -564,41 +623,59 @@ void applicationLoop() {
 		sp.render();
 
 		texture3->bind(GL_TEXTURE0);
-		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glUniform1i(lampShader.getUniformLocation("textura1"), 0);
 		model = glm::mat4();
 		model = glm::translate(glm::mat4(), lightPos2);
 		model = glm::scale(model, glm::vec3(2.0, 2.0, 2.0));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		sp2.render();
-		/*
-		model1 = glm::translate(model1,
-			glm::vec3(sbbTanque.center.x, sbbTanque.center.y, sbbTanque.center.z));
-		model1 = glm::scale(model1,
-			glm::vec3(sbbTanque.ratio, sbbTanque.ratio, sbbTanque.ratio));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model1));
-		BoundingSphere.render();
-		
+		lampShader.turnOff();
 
-		
 		// For test collision sphere vs sphere
+		lampShader.turnOn();
 		SBB s1;
+		AABB a;
 		s1.center = glm::vec3(model1 * glm::vec4(0, 0, 0, 1));
-		s1.ratio = sbbTanque.ratio * 0.005f;
+		s1.ratio = sbbTanque.ratio;
+		
+		//std::cout << "Centro esfera: " << s1.center.x <<", " << s1.center.y << ", " << s1.center.z << std::endl;
+		
+		//std::cout << "Centro esfera: " << sbbTanque.center.x << ", " << sbbTanque.center.y << ", " << sbbTanque.center.z << std::endl;
+		/*
+		std::cout << "Radio: " << sbbTanque.ratio << std::endl;
+		std::cout << "Radio: " << s1.ratio << std::endl;
+		std::cout << "Modelo: " << inputManager.getLookAt().x << ", " << inputManager.getLookAt().y << ", " << inputManager.getLookAt().z << std::endl;
+		*/
+
 		for (int i = 0; i < trees.size(); i++)
 		{
+			//trees[i].aabb.max = glm::vec3(trees[i].model * glm::vec4(trees[i].aabb.max, 1.0f));
+			//trees[i].aabb.min = glm::vec3(trees[i].model * glm::vec4(trees[i].aabb.min, 1.0f));
+			//std::cout << "Tree"<< i << " Max: " << trees[i].aabb.max.x << ", " << trees[i].aabb.max.y << ", " << trees[i].aabb.max.z << std::endl;
+			//std::cout << "Tree" << i << " Min: " << trees[i].aabb.min.x << ", " << trees[i].aabb.min.y << ", " << trees[i].aabb.min.z << std::endl;
 			if (testSphereBoxIntersection(s1, trees[i].aabb))
+			{
 				std::cout << "Tree collision:" << std::endl;
+				inputManager.resetLinearVel();
+				inputManager.resetRightVel();
+			}
+				
 		}
 
 		for (int i = 0; i < rocks.size(); i++)
 		{
+			//rocks[i].aabb.max = glm::vec3(rocks[i].model * glm::vec4(rocks[i].aabb.max, 1.0f));
+			//rocks[i].aabb.min = glm::vec3(rocks[i].model * glm::vec4(rocks[i].aabb.min, 1.0f));
+			//std::cout << "Rock" << i << " Max: " << rocks[i].aabb.max.x << ", " << rocks[i].aabb.max.y << ", " << rocks[i].aabb.max.z << std::endl;
+			//std::cout << "Rock" << i << " Min: " << rocks[i].aabb.min.x << ", " << rocks[i].aabb.min.y << ", " << rocks[i].aabb.min.z << std::endl;
 			if (testSphereBoxIntersection(s1, rocks[i].aabb))
+			{
 				std::cout << "Rock collision:" << std::endl;
+				inputManager.resetLinearVel();
+				inputManager.resetRightVel();
+			}
+				
 		}
-		*/
-
 		lampShader.turnOff();
 
 		cubeMapShader.turnOn();

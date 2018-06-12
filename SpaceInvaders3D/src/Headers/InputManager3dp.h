@@ -181,6 +181,22 @@ public:
 				this->getCameraUp());
 	}
 
+	void resetLinearVel() {
+		this->linearVel = -this->linearVel*0.8f;
+	}
+
+	void resetRightVel() {
+		this->rightVel = -this->rightVel*0.8f;
+	}
+
+	float getLinearVel() {
+		return this->linearVel;
+	}
+
+	float getRightVel() {
+		return this->rightVel;
+	}
+
 	bool isGenerateRay() {
 		return generateRay;
 	}
