@@ -11,6 +11,9 @@
 
 class Sphere {
 public:
+	Sphere() {
+
+	}
 	Sphere(float ratio, int slices, int stacks, MODEL_MODE mode);
 	void init();
 	void load();

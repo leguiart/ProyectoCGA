@@ -81,5 +81,14 @@ typedef struct _SBB {
 	float ratio;
 } SBB;
 
+typedef struct _Enemy {
+	glm::vec3 pos;
+	glm::vec3 movx;
+	glm::vec3 movy;
+	glm::vec3 movz;
+	glm::mat4 model;
+	SBB boundingSphere;
+}Enemy;
+
 #endif /* HEADERS_DEFINITION_H_ */
 

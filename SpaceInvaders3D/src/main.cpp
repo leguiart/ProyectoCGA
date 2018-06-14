@@ -2,7 +2,7 @@
 //glew include
 #include <GL/glew.h>
 
-#include <glm/gtc/random.inl>
+#include <glm/gtc/random.hpp>
 
 //std includes
 #include <string>
@@ -42,7 +42,8 @@
 Sphere sp(1.5, 50, 50, MODEL_MODE::VERTEX_LIGHT_TEXTURE);
 Sphere sp2(1.5, 50, 50, MODEL_MODE::VERTEX_LIGHT_TEXTURE);
 Sphere sp3(1.5, 50, 50, MODEL_MODE::VERTEX_LIGHT_TEXTURE);
-Sphere BoundingSphere(1.0, 50, 50, MODEL_MODE::VERTEX_COLOR);
+Sphere BoundingSphere(1.0, 50, 50, MODEL_MODE::VERTEX);
+Sphere  Proyectil(1.0, 30, 30, MODEL_MODE::VERTEX_LIGHT_COLOR);
 
 Shader directionalLightShader;
 Shader directionalLightPiso;
@@ -63,7 +64,7 @@ CubemapTexture * cubeMaptexture2 = new CubemapTexture("../Textures/ame_nebula", 
 
 Texture * texture1, * texture2, *texture3;
 Piso piso;
-static std::vector<Model> objModel{Model(), Model(), Model(), Model(), Model()};
+static std::vector<Model> objModel{Model(), Model(), Model(), Model()};
 
 
 int screenWidth;
@@ -106,6 +107,8 @@ struct static_model_attribs {
 	glm::mat4 model;
 };
 
+std::vector<int> places;
+
 static std::vector<static_model_attribs>  trees = {
 	{glm::vec3(6.0f, -2.5f, 10.0f), glm::vec3(0.05f, 0.05f, 0.05f)}, {glm::vec3(-20.0f, -2.5f, 15.0f), glm::vec3(0.04f, 0.045f, 0.05f)},
 	{glm::vec3(-1.5f, -2.5f, -42.5f), glm::vec3(0.05f, 0.04f, 0.05f)}, {glm::vec3(10.8f, -2.5f, 12.3f), glm::vec3(0.05f, 0.04f, 0.05f)},
@@ -121,6 +124,13 @@ static std::vector<static_model_attribs> rocks = {
 	{glm::vec3(40.0f, -2.3f, -21.0f), glm::vec3(0.35f, 0.5f, 0.55f)}, {glm::vec3(50.0f, -2.3f, 35.0f), glm::vec3(0.44f, 0.45f, 0.34f)},
 	{glm::vec3(80.0f, -2.3f, -32.0f), glm::vec3(0.2f, 0.5f, 0.3f)}, {glm::vec3(35.0f, -2.3f, 88.0f), glm::vec3(0.5f, 0.6f, 0.32f)}
 };
+
+std::vector<Enemy> enemies = {
+{ glm::vec3(-6.0f, -2.75f, -3.0f), glm::vec3(80.0f, 1.5f, 80.0f) , glm::vec3(0.4f, 1.5f, .4f),  glm::vec3(40.0f, 1.5f, 40.0f)},{ glm::vec3(8.0f, -2.3f, -5.75f), glm::vec3(180.0f, 2.5f, 50.0f) , glm::vec3(5.4f, 1.5f, 5.4f),  glm::vec3(60.0f, 3.5f, 20.0f) },
+{ glm::vec3(4.0f, 2.5f, 32.4f), glm::vec3(150.0f, 1.5f,160.0f) , glm::vec3(60.4f, 1.5f, 80.4f),  glm::vec3(20.0f, 2.5f, 10.0f) }, { glm::vec3(15.0f, -1.3f, 4.65f), glm::vec3(30.0f, 3.5f, 30.0f) , glm::vec3(0.4f, 1.5f, .4f),  glm::vec3(20.0f, 1.5f, 20.0f) },
+{ glm::vec3(90.0f, 2.6f, 43.6f), glm::vec3(20.0f, 1.5f, 80.0f) , glm::vec3(20.4f, 1.5f, 10.4f),  glm::vec3(20.0f, 4.5f, 70.0f) },{ glm::vec3(67.0f, -1.3f, 50.0f), glm::vec3(20.0f, 1.5f, 20.0f) , glm::vec3(20.4f, 6.5f, 20.4f),  glm::vec3(60.0f, 1.0f, 40.0f) },
+{ glm::vec3(40.0f, 1.3f, -21.0f), glm::vec3(30.0f, 1.5f, 80.0f) , glm::vec3(2.4f, 1.5f, 4.4f),  glm::vec3(10.0f, 2.5f, 20.0f) },{ glm::vec3(50.0f, -1.3f, 35.0f), glm::vec3(80.0f, 1.5f, 80.0f) , glm::vec3(0.4f, 1.5f, .4f),  glm::vec3(40.0f, 1.5f, 40.0f) },
+{ glm::vec3(80.0f, 1.5f, -32.0f), glm::vec3(80.0f, 1.5f, 80.0f) , glm::vec3(3.4f, 1.5f, 4.4f),  glm::vec3(40.0f, 2.5f, 40.0f) },{ glm::vec3(35.0f, -1.3f, 88.0f), glm::vec3(80.0f, 1.5f, 80.0f) , glm::vec3(0.4f, 1.5f, .4f),  glm::vec3(40.0f, 1.5f, 40.0f)}};
 
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow* Window, int widthRes, int heightRes);
@@ -186,6 +196,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	glViewport(0, 0, screenWidth, screenHeight);
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
+	//BoundingSphere.init();
+	//BoundingSphere.load();
+
+	Proyectil.init();
+	Proyectil.load();
+
 	// Enable test depth, must be clear depth buffer bit
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -221,12 +237,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	objModel[1].loadModel("../objects/ufo/Low_poly_UFO.obj");
 	objModel[2].loadModel("../objects/rock/rock.obj");
 
-
 	texture2 = new Texture(GL_TEXTURE_2D, "../Textures/tanque.jpg");
 	texture2->load();
 	objModel[3].loadModel("../objects/tank/TANK.obj");
-	
-	objModel[4].loadModel("../objects/cyborg/cyborg.obj");
 
 	piso.init();
 	piso.load();
@@ -235,9 +248,6 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	texture3->load();
 	sp2.init();
 	sp2.load();
-
-	BoundingSphere.init();
-	BoundingSphere.load();
 	
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -245,23 +255,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	sp3.init();
 	sp3.load();
 
-	/*
-	for (int i = 0; i < trees.size(); i++) {
-		
-		trees[i].aabb = getAABB(objModel[0].getMeshes());
-		aux = trees[i].aabb.max.y;
-		trees[i].aabb.max.y = trees[i].aabb.min.y;
-		trees[i].aabb.min.y = aux;
-		rocks[i].aabb = getAABB(objModel[2].getMeshes());
-
-	}*/
 	AABB a1, a2;
+	SBB s1;
 	float aux;
 	a1 = getAABB(objModel[0].getMeshes());
 	aux = a1.max.y;
 	a1.max.y = a1.min.y;
 	a1.min.y = aux;
 	a2 = getAABB(objModel[2].getMeshes());
+	s1 = getSBB(objModel[1].getMeshes());
 	
 	for (GLuint i = 0; i < trees.size(); i++) {
 		trees[i].model = glm::mat4();
@@ -283,6 +285,11 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 		rocks[i].aabb.min = glm::vec3(rocks[i].model * glm::vec4(a2.min, 1.0f));
 		std::cout << "Rock" << i << " Max: " << rocks[i].aabb.max.x << ", " << rocks[i].aabb.max.y << ", " << rocks[i].aabb.max.z << std::endl;
 		std::cout << "Rock" << i << " Min: " << rocks[i].aabb.min.x << ", " << rocks[i].aabb.min.y << ", " << rocks[i].aabb.min.z << std::endl;
+	}
+
+	for (GLuint i = 0; i < enemies.size(); i++)
+	{
+		enemies[i].boundingSphere = s1;
 	}
 
 	// OpenAL init
@@ -469,7 +476,8 @@ void applicationLoop() {
 	glm::vec3 lightPos;
 	glm::vec3 lightPos2;
 	double lastTime = TimeManager::Instance().GetTime();
-	SBB sbbTanque = getSBB(objModel[4].getMeshes());
+	SBB sbbTanque = getSBB(objModel[3].getMeshes());
+	SBB s1 = getSBB(objModel[1].getMeshes());
 
 	while (psi) {
 		psi = processInput(true);
@@ -512,31 +520,32 @@ void applicationLoop() {
 
 		// Draw Trees
 		for (GLuint i = 0; i < trees.size(); i++) {
-			/*
-			trees[i].model = glm::mat4();
-			trees[i].model = glm::translate(trees[i].model, trees[i].pos);
-			trees[i].model = glm::rotate(trees[i].model, -(float)M_PI*0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
-			trees[i].model = glm::scale(trees[i].model, trees[i].scale);
-			*/
 			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(trees[i].model));
-			//trees[i].aabb = getAABB(objModel[0].getMeshes());
 			objModel[0].render(lightingShader);
 		}
-
+		/*
 		model = glm::mat4();
 		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
 		model = glm::translate(model, glm::vec3(-6.0f + 80.0f*glm::cos(1.5f*elapsedTime) - 80.0f*glm::cos(elapsedTime), -2.75f + 0.4f*sin(1.5f*elapsedTime) - 0.4f*sin(elapsedTime), -3.0f + 40.0f*sin(1.5f * elapsedTime) - 40.0f*sin(elapsedTime)));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		objModel[1].render(lightingShader);
+		*/
+
+		for (GLuint i = 0; i < enemies.size(); i++)
+		{
+			enemies[i].model = glm::mat4();
+			enemies[i].model = glm::scale(enemies[i].model, glm::vec3(0.2f, 0.2f, 0.2f));
+			enemies[i].model = glm::translate(enemies[i].model, glm::vec3(enemies[i].pos.x + enemies[i].movx.x*glm::cos(enemies[i].movx.y*elapsedTime) - enemies[i].movx.z*glm::cos(elapsedTime), enemies[i].pos.y + enemies[i].movy.x*sin(enemies[i].movy.y*elapsedTime) - enemies[i].movy.z*sin(elapsedTime), enemies[i].pos.z + enemies[i].movz.x*sin(enemies[i].movz.y * elapsedTime) - enemies[i].movz.z*sin(elapsedTime)));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(enemies[i].model));
+			objModel[1].render(lightingShader);
+			enemies[i].model = glm::translate(enemies[i].model,
+				glm::vec3(enemies[i].boundingSphere.center.x, enemies[i].boundingSphere.center.y, enemies[i].boundingSphere.center.z));
+			enemies[i].model = glm::scale(enemies[i].model,
+				glm::vec3(enemies[i].boundingSphere.ratio, enemies[i].boundingSphere.ratio, enemies[i].boundingSphere.ratio));
+		}
 		
 		// Draw rocks
 		for (GLuint i = 0; i < rocks.size(); i++) {
-			/*
-			rocks[i].model = glm::mat4();
-			rocks[i].model = glm::translate(rocks[i].model, rocks[i].pos);
-			//model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-			rocks[i].model = glm::scale(rocks[i].model, rocks[i].scale);
-			*/
 			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(rocks[i].model));
 			objModel[2].render(lightingShader);
 		}
@@ -550,11 +559,6 @@ void applicationLoop() {
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		objModel[3].render(lightingShader);
 		glm::mat4 model1 = model;
-
-		model = glm::mat4();
-		model = glm::translate(model, glm::vec3(12.0f, -2.5f, -10.0f));
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		objModel[4].render(lightingShader);
 	
 		lightingShader->turnOff();
 
@@ -585,26 +589,31 @@ void applicationLoop() {
 		model1 = glm::scale(model1,
 			glm::vec3(sbbTanque.ratio, sbbTanque.ratio, sbbTanque.ratio));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model1));
-		BoundingSphere.render();
+
+		//BoundingSphere.render();
+		lampShader.turnOff();
+
+		lampShader.turnOn();
+		modelLoc = lampShader.getUniformLocation("model");
+		viewLoc = lampShader.getUniformLocation("view");
+		projLoc = lampShader.getUniformLocation("projection");
+
+		// Pass the matrices to the shader
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		for (int i = 0; i < inputManager.municion.size(); i++) {
+			inputManager.municion[i].model = glm::mat4();
+			inputManager.municion[i].model = glm::translate(inputManager.municion[i].model, inputManager.municion[i].boundingSphere.center);
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(inputManager.municion[i].model));
+			Proyectil.render();
+			//inputManager.municion[i].sphere.render();
+			//std::cout << inputManager.municion[i].lifeSpan << std::endl;
+			//std::cout << inputManager.municion[i].boundingSphere.center.x << ", " << inputManager.municion[i].boundingSphere.center.y << ", " << inputManager.municion[i].boundingSphere.center.z << std::endl;
+		}
 		lampShader.turnOff();
 
 		// Render Light Sphere models
 		lampShader.turnOn();
-		/*
-		glm::mat4 view;
-		view = glm::rotate(view,
-			glm::radians(inputManager.getPitch()),
-			glm::vec3(1, 0, 0));
-		view = glm::rotate(view,
-			glm::radians(inputManager.getYaw()),
-			glm::vec3(0, 1, 0));
-		glm::vec3 cameraPos = inputManager.getCameraPos();
-		view = glm::translate(view,
-			glm::vec3(-cameraPos.x, -cameraPos.y, -cameraPos.z));
-
-		glm::mat4 projection;
-		projection = glm::perspective(45.0f, (float)screenWidth / (float)screenHeight, 0.1f, 500.0f);
-		*/
 
 		// Create transformations
 		modelLoc = lampShader.getUniformLocation("model");
@@ -633,10 +642,66 @@ void applicationLoop() {
 
 		// For test collision sphere vs sphere
 		lampShader.turnOn();
-		SBB s1;
+		/*
+		// Render the rays
+		lampShader.turnOn();
+		if (inputManager.isGenerateRay()) {
+			std::cout << "Generate ray:" << std::endl;
+			glm::vec4 viewport = glm::vec4(0.0f, 0.0f, screenWidth, screenHeight);
+			glm::vec3 o =
+				glm::unProject(
+					glm::vec3(
+						inputManager.getLastMousePos().x,
+						screenHeight
+						- inputManager.getLastMousePos().y,
+						0.0f), view, projection,
+					viewport);
+			glm::vec3 t =
+				glm::unProject(
+					glm::vec3(
+						inputManager.getLastMousePos().x,
+						screenHeight
+						- inputManager.getLastMousePos().y,
+						1.0f), view, projection,
+					viewport);
+
+			glm::vec3 c1 = glm::vec3(model2 * glm::vec4(0, 0, 0, 1));
+			glm::vec3 c2 = glm::vec3(model3 * glm::vec4(0, 0, 0, 1));
+			glm::vec3 dir = glm::normalize(t - o);
+			float t1;
+
+			if (raySphereIntersect(o, t, dir, c1, sbb3.ratio * 0.2f, t1))
+				std::cout << "Picking ufo" << std::endl;
+
+			if (raySphereIntersect(o, t, dir, c2, sbb2.ratio * 0.8f, t1))
+				std::cout << "Picking huevos" << std::endl;
+
+			inputManager.setGenerateRay(false);
+
+			GLuint VAO;
+
+			VertexColor vertex[2] = { { o, glm::vec3(0.0) },
+			{ t, glm::vec3(0.0) } };
+			glGenVertexArrays(1, &VAO);
+			glGenBuffers(1, &VBO);
+			glBindVertexArray(VAO);
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), vertex,
+				GL_STATIC_DRAW);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex[0]),
+				(GLvoid*)0);
+			glEnableVertexAttribArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glBindVertexArray(0);
+
+			//		rays.push_back(VAO);
+		}
+		*/
+
+		SBB s1, s2, s3;
 		AABB a;
 		s1.center = glm::vec3(model1 * glm::vec4(0, 0, 0, 1));
-		s1.ratio = sbbTanque.ratio;
+		s1.ratio = sbbTanque.ratio*0.005f;
 		
 		//std::cout << "Centro esfera: " << s1.center.x <<", " << s1.center.y << ", " << s1.center.z << std::endl;
 		
@@ -676,6 +741,27 @@ void applicationLoop() {
 			}
 				
 		}
+
+		for (int i = 0; i < enemies.size(); i++) {
+			s2.center = glm::vec3(enemies[i].model * glm::vec4(0, 0, 0, 1));
+			s2.ratio = enemies[i].boundingSphere.ratio*0.2f;
+			for (int j = 0; j < inputManager.municion.size(); j++) {
+				s3.center = glm::vec3(inputManager.municion[j].model * glm::vec4(0, 0, 0, 1));
+				s3.ratio = inputManager.municion[j].boundingSphere.ratio;
+				if (testSphereSphereIntersection(s2, s3)) {
+					inputManager.municion[j].collision = true;
+					places.push_back(i);
+				}
+			}
+		}
+
+		for (int i = 0; i < places.size(); i++) {
+			if(places[i]<enemies.size())
+				enemies.erase(enemies.begin() + places[i]);
+		}
+
+		places.clear();
+
 		lampShader.turnOff();
 
 		cubeMapShader.turnOn();
@@ -760,7 +846,7 @@ void applicationLoop() {
 			alSourcePlay(source[0]);
 			ch = 0;
 		}
-		else if (ch > 300) {
+		else if (ch > 500) {
 			alSourceRewind(source[0]);
 		}
 		else {

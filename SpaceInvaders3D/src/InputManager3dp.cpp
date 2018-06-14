@@ -151,12 +151,12 @@ void InputManager3dp::do_movement(float deltaTime) {
 	if (keyState[InputCodes::Q] || keyState[InputCodes::q])
 	{
 		//std::cout << "move left" << std::endl;
-		rightVel -= 0.00013f;
+		rightVel -= 0.00015f;
 	}
 	else if (keyState[InputCodes::E] || keyState[InputCodes::e])
 	{
 		//std::cout << "move right" << std::endl;
-		rightVel += 0.00013f;
+		rightVel += 0.00015f;
 	}
 
 	cameraLookAt.z += offsetz * linearVel;
@@ -167,8 +167,40 @@ void InputManager3dp::do_movement(float deltaTime) {
 	cameraPosOffset += rightVel * Right;
 	linearVel = linearVel * (1.0f - fr);
 	rightVel = rightVel * (1.0f - fr);
-	//linearVel = linearVel * (1.0f - fr);
-	//rightVel = rightVel * (1.0f - fr);
+
+	if (keyState[InputCodes::Space]) {
+		Proyectile p;
+		p.lifeSpan=0.0f;
+		p.boundingSphere.center = this->getLookAt()*2.0f + this->Front;
+		p.boundingSphere.ratio = 1.0f;
+		p.front = this->Front;
+		p.collision = false;
+		//p.front.y = this->Front.y;
+		//p.front.z = this->Front.z;
+		//p.sphere = Sphere(1.0f, 50, 50, VERTEX_COLOR);
+		//p.sphere.init();
+		//p.sphere.load();
+		//p.sphere.render();
+		municion.push_back(p);
+	}
+
+	std::vector<int> places;
+
+	for (int i = 0; i < municion.size(); i++) {
+		this->Parabolico(linearVel, deltaTime, municion[i]);
+		if (municion[i].lifeSpan > 7.0f) {
+			places.push_back(i);
+		}
+		else if (municion[i].collision) {
+			places.push_back(i);
+		}
+	}
+
+	for (int i = 0; i < places.size(); i++) {
+		if (places[i]<municion.size())
+			municion.erase(municion.begin() + places[i]);
+	}
+
 	yaw = 180 - theta;
 
 	scrollYoffset = 0;

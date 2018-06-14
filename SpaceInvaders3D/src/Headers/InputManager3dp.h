@@ -2,11 +2,13 @@
 #define _InputManager3dp_H
 
 #define GLM_FORCE_RADIANS
+#include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform2.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "definition.h"
 
 // Standar GLFW for the management of inputs codes keyboards
 enum InputCodes {
@@ -78,6 +80,15 @@ enum State {
 	RELESED = 0, PRESSED = 1, REPEATED = 2
 };
 
+typedef struct _Proyectile {
+	SBB boundingSphere;
+	//Sphere sphere;
+	float lifeSpan;
+	glm::mat4 model;
+	glm::vec3 front;
+	bool collision;
+} Proyectile;
+
 class InputManager3dp {
 public:
 
@@ -85,7 +96,8 @@ public:
 		lastMousePos(glm::ivec2(0.0)), deltax(0), deltay(0), scrollYoffset(0), 
 		cameraPos(glm::vec3(0.0f, 0.0f, 3.0f)), cameraLookAt(cameraLookAt),
 		yaw(0), pitch(pitch), roll(0), 
-		thetaOffset(0), distanceFromPlayer(distanceFromPlayer), angleAroundPlayer(angleAroundPlayer) {
+		thetaOffset(0), distanceFromPlayer(distanceFromPlayer), angleAroundPlayer(angleAroundPlayer) 
+	{
 		mouseButtomState = new bool[3];
 		keyState = new bool[1024];
 		for (int i = 0; i < 3; i++)
@@ -206,7 +218,8 @@ public:
 	}
 
 	bool generateRay;
-
+	std::vector<Proyectile> municion;
+	//Proyectile p;
 
 protected:
 	glm::ivec2 lastMousePos;
@@ -230,6 +243,17 @@ private:
 		//std::cout << "Front: " << Front.x << ", "<< Front.y << ", " << Front.z << std::endl;
 		//std::cout << "Right: " << Right.x << ", " << Right.y << ", " << Right.z << std::endl;
 		//std::cout << "Up: " << Up.x << ", " << Up.y << ", " << Up.z << std::endl;
+	}
+
+	void Parabolico(float vel, float deltaTime, Proyectile &proy) {
+		proy.lifeSpan += deltaTime;
+		proy.boundingSphere.center.x += (vel + 2.0f) * proy.front.x;
+		proy.boundingSphere.center.y += (vel + 2.0f) * proy.front.y - proy.lifeSpan*0.08f;
+		proy.boundingSphere.center.z += (vel + 2.0f) * proy.front.z;
+
+		//std::cout << proy.lifeSpan << std::endl;
+		//std::cout << proy.boundingSphere.center.x << ", " << proy.boundingSphere.center.y << ", " << proy.boundingSphere.center.z << std::endl;
+		//runTime+=deltaT;
 	}
 };
 
