@@ -151,12 +151,12 @@ void InputManager3dp::do_movement(float deltaTime) {
 	if (keyState[InputCodes::Q] || keyState[InputCodes::q])
 	{
 		//std::cout << "move left" << std::endl;
-		rightVel -= 0.00015f;
+		rightVel -= 0.0015f;
 	}
 	else if (keyState[InputCodes::E] || keyState[InputCodes::e])
 	{
 		//std::cout << "move right" << std::endl;
-		rightVel += 0.00015f;
+		rightVel += 0.0015f;
 	}
 
 	cameraLookAt.z += offsetz * linearVel;

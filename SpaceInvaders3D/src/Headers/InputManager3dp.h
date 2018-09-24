@@ -104,8 +104,8 @@ public:
 			mouseButtomState[i] = false;
 		for (int i = 0; i < 1024; i++)
 			keyState[i] = false;
-		this->cameraPosOffset = this->cameraLookAt;
-		this->WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+		cameraPosOffset = cameraLookAt;
+		WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 		this->updateModelVectors();
 		rightVel = 0.0f;
 		linearVel = 0.0f;
@@ -169,27 +169,27 @@ public:
 	}
 
 	glm::vec3 getCameraFront() {
-		return glm::normalize(this->cameraLookAt - this->cameraPos);
+		return glm::normalize(cameraLookAt - cameraPos);
 	}
 
 	glm::vec3 getCameraRight(){
-		return glm::normalize(glm::cross(this->getCameraFront(), WorldUp));
+		return glm::normalize(glm::cross(Front, WorldUp));
 	}
 
 	glm::vec3 getCameraUp() {
-		return glm::normalize(glm::cross(this->getCameraRight(), this->getCameraFront()));
+		return glm::normalize(glm::cross(Right, Front));
 	}
 
 	glm::vec3 getFront() {
-		return this->Front;
+		return Front;
 	}
 
 	glm::vec3 getUp() {
-		return this->Up;
+		return Up;
 	}
 
 	glm::mat4 getViewMatrix() {
-		return glm::lookAt(this->cameraPos, this->cameraLookAt,
+		return glm::lookAt(cameraPos, cameraLookAt,
 				this->getCameraUp());
 	}
 

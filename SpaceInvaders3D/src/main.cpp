@@ -155,8 +155,8 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	screenWidth = width;
 	screenHeight = height;
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	if (bFullScreen)
@@ -168,7 +168,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	if (window == nullptr) {
 		std::cerr
-			<< "Error to create GLFW window, you can try download the last version of your video card that support OpenGL 3.3+"
+			<< "Error to create GLFW window, you can try download the last version of your video card that support OpenGL 4.0+"
 			<< std::endl;
 		destroyWindow();
 		exit(-1);
@@ -834,12 +834,12 @@ void applicationLoop() {
 		listenerPos[2] = inputManager.getCameraPos().z;
 		alListenerfv(AL_POSITION, listenerPos);
 
-		listenerOri[0] = inputManager.getFront().x;
-		listenerOri[1] = inputManager.getFront().y;
-		listenerOri[2] = inputManager.getFront().z;
-		listenerOri[3] = inputManager.getUp().x;
-		listenerOri[4] = inputManager.getUp().y;
-		listenerOri[5] = inputManager.getUp().z;
+		listenerOri[0] = inputManager.getCameraFront().x;
+		listenerOri[1] = inputManager.getCameraFront().y;
+		listenerOri[2] = inputManager.getCameraFront().z;
+		listenerOri[3] = inputManager.getCameraUp().x;
+		listenerOri[4] = inputManager.getCameraUp().y;
+		listenerOri[5] = inputManager.getCameraUp().z;
 		alListenerfv(AL_ORIENTATION, listenerOri);
 
 		if (inputManager.getKeyState()[InputCodes::Space]) {
