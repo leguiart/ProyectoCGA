@@ -141,7 +141,7 @@ void mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void init(int width, int height, std::string strTitle, bool bFullScreen);
 void destroyWindow();
 void destroy();
-void view_proj(Shader*, glm::vec3, glm::vec3);
+void view_proj(Shader*, glm::vec3, glm::vec3, glm::mat4);
 bool processInput(bool continueApplication = true);
 
 // Implementacion de todas las funciones.
@@ -387,14 +387,14 @@ bool processInput(bool continueApplication) {
 		|| glfwWindowShouldClose(window) != 0) {
 		return false;
 	}
-	TimeManager::Instance().CalculateFrameRate(false);
-	deltaTime = TimeManager::Instance().DeltaTime;
+	TimeManager::Singleton().CalculateFrameRate(false);
+	deltaTime = TimeManager::Singleton().DeltaTime;
 	glfwPollEvents();
 	inputManager.do_movement(deltaTime);
 	return continueApplication;
 }
 
-void view_proj(Shader * lightingShader, glm::vec3 lightPos1, glm::vec3 lightPos2)
+void view_proj(Shader * lightingShader, glm::vec3 lightPos1, glm::vec3 lightPos2, glm::mat4 projection)
 {
 	lightingShader->turnOn();
 	GLint viewPosLoc = lightingShader->getUniformLocation("viewPos");
@@ -460,9 +460,6 @@ void view_proj(Shader * lightingShader, glm::vec3 lightPos1, glm::vec3 lightPos2
 	view = glm::translate(view,
 		glm::vec3(-cameraPos.x, -cameraPos.y, -cameraPos.z));
 
-	glm::mat4 projection;
-	projection = glm::perspective(45.0f, (float)screenWidth / (float)screenHeight, 0.1f, 500.0f);
-
 	// Get the uniform locations
 	GLint viewLoc = lightingShader->getUniformLocation("view");
 	GLint projLoc = lightingShader->getUniformLocation("projection");
@@ -475,10 +472,9 @@ void applicationLoop() {
 	bool psi = true;
 	glm::vec3 lightPos;
 	glm::vec3 lightPos2;
-	double lastTime = TimeManager::Instance().GetTime();
+	double lastTime = TimeManager::Singleton().GetTime();
 	SBB sbbTanque = getSBB(objModel[3].getMeshes());
 	SBB s1 = getSBB(objModel[1].getMeshes());
-
 	while (psi) {
 		psi = processInput(true);
 		// This is new, need clear depth buffer bit
@@ -486,7 +482,8 @@ void applicationLoop() {
 		elapsedTime += deltaTime;
 		lightPos = glm::vec3(0.4f*sin(0.1f*elapsedTime) - 0.4f*sin(elapsedTime), 50.0f*glm::cos(0.1f*elapsedTime), 100.0f*sin(0.1f * elapsedTime));
 		lightPos2 = glm::vec3(0.4f*sin(0.1f*elapsedTime) - 0.4f*sin(elapsedTime), 50.0f*glm::cos(0.1f*elapsedTime + M_PI), 100.0f*sin(0.1f * elapsedTime));
-
+		glm::mat4 projection;
+		projection = glm::perspective(45.0f, (float)screenWidth / (float)screenHeight, 0.1f, 500.0f);
 		/* Algo con la linterna
 		if(lightPos.y>0)
 			lightingShader = &directionalLightShader;
@@ -495,7 +492,7 @@ void applicationLoop() {
 		*/
 		lightingShader = &directionalLightPiso;
 		lightingShader->turnOn();
-		view_proj(lightingShader, lightPos, lightPos2);
+		view_proj(lightingShader, lightPos, lightPos2, projection);
 		// Get the uniform locations
 		GLint modelLoc = lightingShader->getUniformLocation("model");
 
@@ -515,7 +512,7 @@ void applicationLoop() {
 
 		lightingShader = &directionalLightShader;
 		lightingShader->turnOn();
-		view_proj(lightingShader, lightPos, lightPos2);
+		view_proj(lightingShader, lightPos, lightPos2, projection);
 		modelLoc = lightingShader->getUniformLocation("model");
 
 		// Draw Trees
@@ -575,8 +572,7 @@ void applicationLoop() {
 		view = glm::translate(view,
 			glm::vec3(-cameraPos.x, -cameraPos.y, -cameraPos.z));
 
-		glm::mat4 projection;
-		projection = glm::perspective(45.0f, (float)screenWidth / (float)screenHeight, 0.1f, 500.0f);
+		
 		modelLoc = lampShader.getUniformLocation("model");
 		GLint viewLoc = lampShader.getUniformLocation("view");
 		GLint projLoc = lampShader.getUniformLocation("projection");

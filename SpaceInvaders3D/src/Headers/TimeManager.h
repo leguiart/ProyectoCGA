@@ -7,10 +7,10 @@
 class TimeManager {
 public:
 
-	static TimeManager& Instance() {
-		static TimeManager instance;
+	static TimeManager& Singleton() {
+		static TimeManager singleton;
 
-		return instance;
+		return singleton;
 	}
 
 	double CalculateFrameRate(bool writeToConsole);
